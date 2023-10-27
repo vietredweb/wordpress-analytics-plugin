@@ -53,14 +53,20 @@ module.exports = {
         onEnd: {
           copy: [
             {
-              source: path.resolve(__dirname, './node_modules/aesirx-bi-app/public/assets/images/'),
+              source: path.resolve(
+                __dirname,
+                '../../node_modules/aesirx-bi-app/public/assets/images/'
+              ),
               destination: path.resolve(
                 __dirname,
                 `${dist}/plugins/aesirx-analytics/assets/images/`
               ),
             },
             {
-              source: path.resolve(__dirname, './node_modules/aesirx-bi-app/public/assets/data/'),
+              source: path.resolve(
+                __dirname,
+                '../../node_modules/aesirx-bi-app/public/assets/data/'
+              ),
               destination: path.resolve(__dirname, `${dist}/plugins/aesirx-analytics/assets/data/`),
             },
           ],
@@ -98,7 +104,7 @@ module.exports = {
   },
   resolve: {
     alias: {
-      react$: require.resolve(path.resolve(__dirname, './node_modules/react')),
+      react$: require.resolve(path.resolve(__dirname, '../../node_modules/react')),
     },
     extensions: ['.tsx', '.ts', '.js'],
     fallback: { 'process/browser': require.resolve('process/browser') },

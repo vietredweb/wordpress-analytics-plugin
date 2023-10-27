@@ -1,58 +1,32 @@
 {
-  "name": "aesirx_analytics",
-  "version": "2.2.1",
-  "description": "analytics via aesirx",
   "private": true,
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "gulp zip",
-    "watch": "gulp watch",
-    "format:check": "prettier --check .",
-    "format:write": "prettier --write ."
-  },
+  "workspaces": [
+    "packages/wordpress-analytics-plugin",
+    "packages/aesirx-bi-app/packages/aesirx-bi-app",
+    "packages/aesirx-analytics",
+    "packages/aesirx-uikit"
+  ],
   "devDependencies": {
-    "@prettier/plugin-php": "^0.19.7",
-    "@types/react": "^18.2.8",
-    "@types/react-dom": "^18.2.1",
-    "css-loader": "^6.8.1",
-    "del": "^7.0.0",
-    "dotenv": "^16.3.1",
-    "filemanager-webpack-plugin": "^8.0.0",
-    "git-revision-webpack-plugin": "^5.0.0",
-    "gulp": "^4.0.2",
-    "gulp-composer": "^0.4.5",
-    "gulp-zip": "^5.1.0",
-    "lodash": "^4.17.21",
-    "prettier": "^2.8.8",
-    "process": "^0.11.10",
-    "sass": "^1.62.1",
-    "sass-loader": "^13.3.2",
-    "style-loader": "^3.3.2",
-    "terser-webpack-plugin": "^5.3.7",
-    "ts-loader": "^9.4.2",
-    "typescript": "^5.2.2",
-    "webpack": "^5.88.0",
-    "webpack-assets-manifest": "^5.1.0",
-    "webpack-stream": "^7.0.0"
-  },
-  "dependencies": {
-    "aesirx-analytics": "^2.2.0",
-    "aesirx-bi-app": "^1.2.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-spinners": "^0.13.8"
+    "nx": "16.3.2"
   },
   "resolutions": {
-    "react": "^18",
-    "react-dom": "^18",
+    "@yarnpkg/parsers": "3.0.0-rc.48.1",
     "tough-cookie": "^4",
     "semver": "^7",
     "jsdom": "^16",
     "nth-check": "^2",
     "postcss": "^8",
     "json5": "^2",
-    "d3-color": "^3",
-    "glob-parent": "^5",
-    "shelljs": "^0.8.5 "
+    "@types/react": "^18",
+    "d3-color": "^3"
+  },
+  "scripts": {
+    "prepare": "nx run-many -t build -p aesirx-uikit aesirx-analytics && nx run-many -t build:lib --exclude aesirx-uikit aesirx_analytics",
+    "dev": "nx run-many -t dev -p aesirx-bi-app aesirx-analytics aesirx-uikit aesirx_analytics",
+    "build": "nx run aesirx_analytics:build",
+    "build:lib": "nx run aesirx_analytics:build:lib",
+    "lint:check": "nx run aesirx_analytics:lint:check",
+    "format:check": "nx run aesirx_analytics:format:check",
+    "prepublishOnly": "nx run aesirx_analytics:prepublishOnly"
   }
 }
