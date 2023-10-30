@@ -10,3 +10,7 @@
 	path = packages/aesirx-bi-app
 	url = https://github.com/aesirxio/bi-app.git
 	branch = develop
+[submodule "packages/aesirx-lib"]
+	path = packages/aesirx-lib
+	url = https://github.com/aesirxio/aesirx-lib.git
+	branch = develop

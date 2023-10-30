@@ -4,7 +4,8 @@
     "packages/wordpress-analytics-plugin",
     "packages/aesirx-bi-app/packages/aesirx-bi-app",
     "packages/aesirx-analytics",
-    "packages/aesirx-uikit"
+    "packages/aesirx-uikit",
+    "packages/aesirx-lib"
   ],
   "devDependencies": {
     "nx": "16.3.2"
@@ -21,8 +22,8 @@
     "d3-color": "^3"
   },
   "scripts": {
-    "prepare": "nx run-many -t build -p aesirx-uikit aesirx-analytics && nx run-many -t build:lib --exclude aesirx-uikit aesirx_analytics",
-    "dev": "nx run-many -t dev -p aesirx-bi-app aesirx-analytics aesirx-uikit aesirx_analytics",
+    "prepare": "nx run-many -t build -p aesirx-uikit aesirx-lib aesirx-analytics && nx run-many -t build:lib --exclude aesirx-uikit aesirx-lib aesirx_analytics",
+    "dev": "nx run-many -t dev -p aesirx-bi-app aesirx-analytics aesirx-uikit aesirx-lib aesirx_analytics",
     "build": "nx run aesirx_analytics:build",
     "build:lib": "nx run aesirx_analytics:build:lib",
     "lint:check": "nx run aesirx_analytics:lint:check",
