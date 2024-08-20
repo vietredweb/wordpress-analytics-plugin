@@ -2,16 +2,15 @@
 /**
  * Plugin Name: AesirX Analytics
  * Plugin URI: https://analytics.aesirx.io?utm_source=wpplugin&utm_medium=web&utm_campaign=wordpress&utm_id=aesirx&utm_term=wordpress&utm_content=analytics
- * Description: Aesirx analytics plugin. When you join forces with AesirX, you're not just becoming a Partner - you're also becoming a freedom fighter in the battle for privacy! Earn 25% Affiliate Commission <a href="https://aesirx.io/seed-round?utm_source=wpplugin&utm_medium=web&utm_campaign=wordpress&utm_id=aesirx&utm_term=wordpress&utm_content=analytics">[Click to Join]</a>
- * Version: 3.1.3
+ * Description: Aesirx analytics plugin. When you join forces with AesirX, you're not just becoming a Partner - you're also becoming a freedom fighter in the battle for privacy! Earn 25% Affiliate Commission <a href="https://aesirx.io/partner?utm_source=wpplugin&utm_medium=web&utm_campaign=wordpress&utm_id=aesirx&utm_term=wordpress&utm_content=analytics">[Click to Join]</a>
+ * Version: 4.1.2
  * Author: aesirx.io
  * Author URI: https://aesirx.io/
  * Domain Path: /languages
  * Text Domain: aesirx-analytics
- * Requires PHP: 8.1
+ * Requires PHP: 7.4
  * License: GPL v3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
- * Requires Plugins: wp-crontrol
  * 
  **/
 
@@ -27,15 +26,18 @@ use AesirxAnalyticsLib\RouterFactory;
 use Pecee\Http\Request;
 use Pecee\SimpleRouter\Exceptions\NotFoundHttpException;
 use Pecee\SimpleRouter\Route\RouteUrl;
+use AesirxAnalytics\Migrator\MigratorMysql;
 
 require_once plugin_dir_path(__FILE__) . 'vendor/autoload.php';
 require_once 'includes/settings.php';
+
+include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 
 function aesirx_analytics_config_is_ok(string $isStorage = null): bool {
     $options = get_option('aesirx_analytics_plugin_options');
     $res = (!empty($options['storage'])
         && (
-            ($options['storage'] == 'internal' && !empty($options['license']) && CliFactory::getCli()->analyticsCliExists())
+            ($options['storage'] == 'internal')
             || ($options['storage'] == 'external' && !empty($options['domain']))
         ));
 
@@ -50,7 +52,7 @@ function aesirx_analytics_config_is_ok(string $isStorage = null): bool {
 
 if (aesirx_analytics_config_is_ok()) {
     add_action('wp_enqueue_scripts', function (): void {
-        wp_register_script('aesirx-analytics', plugins_url('assets/js/analytics.js', __FILE__), [], true, true);
+        wp_register_script('aesirx-analytics', plugins_url('assets/vendor/analytics.js', __FILE__), [], true, true);
         wp_enqueue_script('aesirx-analytics');
 
         $options = get_option('aesirx_analytics_plugin_options');
@@ -70,7 +72,14 @@ if (aesirx_analytics_config_is_ok()) {
         $clientId = $options['clientid'] ?? '';
         $secret = $options['secret'] ?? '';
 
-        wp_add_inline_script('aesirx-analytics', 'window.aesirx1stparty="' . $domain . '";window.disableAnalyticsConsent="' . $consent . '";window.aesirxClientID="' . $clientId . '";window.aesirxClientSecret="' . $secret . '";window.aesirxTrackEcommerce="' . $trackEcommerce . '";', 'before');
+        wp_add_inline_script(
+            'aesirx-analytics',
+            'window.aesirx1stparty="' . esc_html($domain) . '";
+            window.disableAnalyticsConsent="' . esc_html($consent) . '";
+            window.aesirxClientID="' . esc_html($clientId) . '";
+            window.aesirxClientSecret="' . esc_html($secret) . '";
+            window.aesirxTrackEcommerce="' . esc_html($trackEcommerce) . '";',
+            'before');
     });
 
     // Track e-commerce
@@ -78,16 +87,13 @@ if (aesirx_analytics_config_is_ok()) {
         $options = get_option('aesirx_analytics_plugin_options');
 
         if (is_admin()
-            || ($options['track_ecommerce'] ?? 'true') != 'true')
+            || ($options['track_ecommerce'] ?? 'true') != 'true'
+            || !isset($_SESSION))
         {
             return;
         }
 
-        if (!session_id()) {
-            session_start();
-        }
-
-        $flowUuid = sanitize_text_field($_SESSION['analytics_flow_uuid']) ?? null;
+        $flowUuid = isset($_SESSION['analytics_flow_uuid']) ? sanitize_text_field($_SESSION['analytics_flow_uuid']) : null;
 
         if (is_null($flowUuid))
         {
@@ -104,7 +110,7 @@ if (aesirx_analytics_config_is_ok()) {
         }
 
         (new \AesirxAnalytics\Integration\Woocommerce($tracker, $flowUuid))
-            ->registerHooks();
+        ->registerHooks();
     } );
 }
 
@@ -116,14 +122,16 @@ add_action('plugins_loaded', function () {
   );
 });
 
-add_action('analytics_cron_geo', function () {
-    if (aesirx_analytics_config_is_ok('internal')) {
-        CliFactory::getCli()->processAnalytics(['job', 'geo']);
-    }
-});
-
-if (!wp_next_scheduled('analytics_cron_geo')) {
-  wp_schedule_event(time(), 'hourly', 'analytics_cron_geo');
+if (is_plugin_active('wp-crontrol/wp-crontrol.php')) {
+    add_action('analytics_cron_geo', function () {
+        if (aesirx_analytics_config_is_ok('internal')) {
+            CliFactory::getCli()->processAnalytics(['job', 'geo']);
+        }
+    });
+    
+    if (!wp_next_scheduled('analytics_cron_geo')) {
+      wp_schedule_event(time(), 'hourly', 'analytics_cron_geo');
+    }    
 }
 
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links) {
@@ -132,139 +140,104 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links)
   return $links;
 });
 
-if (CliFactory::getCli()->analyticsCliExists()) {
-    add_action( 'parse_request', 'aesirx_analytics_url_handler' );
-}
+add_action( 'parse_request', 'aesirx_analytics_url_handler' );
+
 
 function aesirx_analytics_url_handler()
 {
-  $options = get_option('aesirx_analytics_plugin_options');
+    $options = get_option('aesirx_analytics_plugin_options');
 
-  if (($options['storage'] ?? 'internal') != 'internal') {
-    return;
-  }
+    if (($options['storage'] ?? 'internal') != 'internal') {
+        return;
+    }
 
-  //	define( 'WP_DEBUG', true );
-  //	define( 'WP_DEBUG_DISPLAY', true );
-  //	@ini_set( 'display_errors', 1 );
     $callCommand = function (array $command): string {
         try
         {
-            $process = CliFactory::getCli()->processAnalytics($command);
+            $data = CliFactory::getCli()->processAnalytics($command);
         }
-        catch (Throwable $e)
+        catch (Exception $e)
         {
-            $code = 500;
-
-            if ($e instanceof ExceptionWithErrorType)
-            {
-                switch ($e->getErrorType())
-                {
-                    case "NotFoundError":
-                        $code = 404;
-                        break;
-                    case "ValidationError":
-                        $code = 400;
-                        break;
-                    case "Rejected":
-                        $code = 406;
-                        break;
-                }
-            }
-
-            throw new ExceptionWithResponseCode($e->getMessage(), $code, $e->getCode(), $e);
+            error_log($e->getMessage());
+            $data = wp_json_encode([
+                'error' => $e->getMessage()
+            ]);
         }
 
         if (!headers_sent()) {
             header( 'Content-Type: application/json; charset=utf-8' );
         }
-        return $process->getOutput();
+        return $data;
     };
 
-  try {
-      $router = (new RouterFactory(
-          $callCommand,
-          new IsBackendMiddleware(),
-          null,
-          site_url( '', 'relative' ))
-      )
-          ->getSimpleRouter();
+    try {
+        $router = (new RouterFactory(
+            $callCommand,
+            new IsBackendMiddleware(),
+            null,
+            site_url( '', 'relative' ))
+        )
+            ->getSimpleRouter();
 
-      $router->addRoute(
-          (new RouteUrl('/remember_flow/{flow}', static function (string $flow): string {
-              if (!session_id()) {
-                  session_start();
-              }
+        $router->addRoute(
+            (new RouteUrl('/remember_flow/{flow}', static function (string $flow): string {
 
-              $_SESSION['analytics_flow_uuid'] = $flow;
+                $_SESSION['analytics_flow_uuid'] = $flow;
 
-              return json_encode(true);
-          }))
-              ->setWhere(['flow' => '[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}'])
-              ->setRequestMethods([Request::REQUEST_TYPE_POST])
-      );
+                return wp_json_encode(true);
+            }))
+                ->setWhere(['flow' => '[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}'])
+                ->setRequestMethods([Request::REQUEST_TYPE_POST])
+        );
 
-      echo wp_kses_post($router->start());
-  } catch (Throwable $e) {
-    if ($e instanceof NotFoundHttpException) {
-      return;
+        echo wp_kses_post($router->start());
+    } catch (Throwable $e) {
+        if ($e instanceof NotFoundHttpException) {
+        return;
+        }
+
+        if ($e instanceof ExceptionWithResponseCode) {
+            $code = $e->getResponseCode();
+        } else {
+            $code = 500;
+        }
+
+        if (!headers_sent()) {
+            header( 'Content-Type: application/json; charset=utf-8' );
+        }
+        http_response_code($code);
+        echo wp_json_encode([
+            'error' => $e->getMessage(),
+        ]);
     }
 
-    if ($e instanceof ExceptionWithResponseCode) {
-        $code = $e->getResponseCode();
-    } else {
-        $code = 500;
-    }
-
-      if (!headers_sent()) {
-          header( 'Content-Type: application/json; charset=utf-8' );
-      }
-    http_response_code($code);
-    echo wp_json_encode([
-        'error' => $e->getMessage(),
-    ]);
-  }
-
-  die();
+    die();
 }
 
 register_activation_hook(__FILE__, 'aesirx_analytics_initialize_function');
 function aesirx_analytics_initialize_function() {
-    add_option('aesirx_analytics_do_activation_redirect', true);
-}
+    global $wpdb;
 
-function aesirx_analytics_update_plugins(WP_Upgrader $upgrader_object, array $options ): void {
-    $current_plugin_path_name = plugin_basename( __FILE__ );
-    $download = false;
+    //Add migration table
+    MigratorMysql::aesirx_analytics_create_migrator_table_query();
+    $migration_list = array_column(MigratorMysql::aesirx_analytics_fetch_rows(), 'name');
 
-    if (in_array($options['action'], ['update', 'install'])
-        && $options['type'] == 'plugin' ) {
-        if ($options['bulk'] ?? false) {
-            foreach($options['plugins'] as $each_plugin) {
-                if ($each_plugin == $current_plugin_path_name) {
-                    $download = true;
-                    break;
-                }
+    $files = glob(plugin_dir_path( __FILE__ ) . 'src/Migration/*.php');
+    
+    foreach ($files as $file) {
+        include_once $file;
+        $file_name = basename($file, ".php");
+
+        if(!in_array($file_name, $migration_list)) {
+            MigratorMysql::aesirx_analytics_add_migration_query($file_name);
+            foreach ($sql as $each_query) {
+                // used placeholders and $wpdb->prepare() in variable $each_query
+                // need $wpdb->query() for ALTER TABLE
+                $wpdb->query($each_query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             }
-        } elseif (property_exists($upgrader_object, 'new_plugin_data')
-                && !empty($upgrader_object->new_plugin_data['Name'])
-                && $upgrader_object->new_plugin_data['Name'] == 'aesirx-analytics'
-                && property_exists($upgrader_object->skin, 'overwrite')
-                && $upgrader_object->skin->overwrite == 'update-plugin') {
-            $download = true;
-        }
+        }       
     }
-
-    $options = get_option('aesirx_analytics_plugin_options');
-
-    if ($download
-        && ($options['storage'] ?? null) == 'internal') {
-        try {
-            CliFactory::getCli()->downloadAnalyticsCli();
-        } catch (Throwable $e) {
-            set_transient( 'aesirx_analytics_update_notice', serialize($e) );
-        }
-    }
+    add_option('aesirx_analytics_do_activation_redirect', true);
 }
 
 function aesirx_analytics_display_update_notice(  ) {
@@ -276,7 +249,9 @@ function aesirx_analytics_display_update_notice(  ) {
         if ($notice instanceof Throwable)
         {
             /* translators: %s: error message */
-            echo aesirx_analytics_escape_html('<div class="notice notice-error"><p>' . sprintf(esc_html__('Problem with Aesirx Analytics plugin install: %s', 'aesirx-analytics'), $notice->getMessage()) . '</p></div>');
+            // using custom function to escape HTML in error message
+            error_log($notice->getMessage());
+            echo aesirx_analytics_escape_html('<div class="notice notice-error"><p>' . esc_html__('Problem with Aesirx Analytics plugin install', 'aesirx-analytics') . '</p></div>');
         }
 
         delete_transient( 'aesirx_analytics_update_notice' );
@@ -284,7 +259,6 @@ function aesirx_analytics_display_update_notice(  ) {
 }
 
 add_action( 'admin_notices', 'aesirx_analytics_display_update_notice' );
-add_action( 'upgrader_process_complete', 'aesirx_analytics_update_plugins', 10, 2);
 
 add_action('admin_init', function () {
     if (get_option('aesirx_analytics_do_activation_redirect', false)) {
@@ -295,33 +269,4 @@ add_action('admin_init', function () {
             exit();
         }
     }
-
-    add_action('load-options.php', function () {
-        if (!array_key_exists('submit', $_REQUEST)
-            || $_REQUEST['submit'] !== 'download_analytics_cli'
-            || !array_key_exists('option_page', $_REQUEST)
-            || $_REQUEST['option_page'] !== 'aesirx_analytics_plugin_options') {
-            return;
-        }
-
-        try {
-            CliFactory::getCli()->downloadAnalyticsCli();
-
-            add_settings_error(
-                'aesirx_analytics_plugin_options',
-                'download',
-                esc_html__('Library successfully downloaded.', 'aesirx-analytics'),
-                'info'
-            );
-        }
-        catch (Throwable $e)
-        {
-            add_settings_error(
-                'aesirx_analytics_plugin_options',
-                'download',
-                /* translators: %s: error message */
-                sprintf(esc_html__('Error: %s', 'aesirx-analytics'), $e->getMessage())
-            );
-        }
-    });
 });

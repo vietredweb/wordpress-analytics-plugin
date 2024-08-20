@@ -19,7 +19,9 @@
     "postcss": "^8",
     "json5": "^2",
     "@types/react": "^18",
-    "d3-color": "^3"
+    "d3-color": "^3",
+    "tsup": "7.2.0",
+    "rollup": "3.2.5"
   },
   "scripts": {
     "prepare": "nx run-many -t build -p aesirx-uikit aesirx-lib aesirx-analytics && nx run-many -t build:lib --exclude aesirx-uikit aesirx-lib aesirx_analytics",
