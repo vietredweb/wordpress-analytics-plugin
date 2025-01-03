@@ -1,5 +1,6 @@
 const zip = require('gulp-zip');
 const gulp = require('gulp');
+const rename = require('gulp-rename');
 const composer = require('gulp-composer');
 const webpack = require('webpack-stream');
 const { watch, series } = require('gulp');
@@ -23,7 +24,14 @@ function movePluginFolderTask() {
 
 function moveAnalyticJSTask() {
   return gulp
-    .src(['../../node_modules/aesirx-analytics/dist/analytics.js'])
+    .src(['./node_modules/aesirx-analytics/dist/analytics.js'])
+    .pipe(rename('consent.js'))
+    .pipe(gulp.dest(`${dist}/plugins/aesirx-analytics/assets/vendor`));
+}
+
+function moveRepeatableFieldsJSTask() {
+  return gulp
+    .src(['./wp-content/plugins/aesirx-analytics/aesirx-analytics-repeatable-fields.js'])
     .pipe(gulp.dest(`${dist}/plugins/aesirx-analytics/assets/vendor`));
 }
 
@@ -66,6 +74,7 @@ exports.zip = series(
   cleanTask,
   movePluginFolderTask,
   moveAnalyticJSTask,
+  moveRepeatableFieldsJSTask,
   webpackBIApp,
   composerTask,
   cleanComposerTask,
@@ -79,6 +88,6 @@ exports.watch = function () {
   watch('./assets/**', series(webpackBIAppWatch));
   watch(
     './wp-content/plugins/aesirx-analytics/**',
-    series(movePluginFolderTask, moveAnalyticJSTask, composerTask)
+    series(movePluginFolderTask, moveAnalyticJSTask, moveRepeatableFieldsJSTask, composerTask)
   );
 };

@@ -1,9 +1,9 @@
 === AesirX Analytics ===
 Contributors: aesirx,vikingtechguy,nixa999,nguyenbao10,vietnguyen1406,devphutran
 Tags: privacy, analytics, compliance, wordpress analytics, consent
-Requires at least: 6.5
-Tested up to: 6.6
-Stable tag: 4.1.2
+Requires at least: 5.9
+Tested up to: 6.6.2
+Stable tag: 4.2.3
 Requires PHP: 7.4
 License: GPL 3.0
 
@@ -64,6 +64,40 @@ We are using our server dev01.aesirx.io for validating wallet and JWT decoding.
 The Terms of service can be found here https://aesirx.io/terms-conditions and the Privacy policy is here https://aesirx.io/privacy-policy.
 
 == Changelog ==
+
+= 4.2.3 =
+
+* Fix bugs consent
+
+= 4.2.2 =
+
+* Add Blocking feature option
+
+= 4.2.1 =
+
+* Update Blocking feature
+
+= 4.2.0 =
+
+* AesirX Consent Shield for Third-Party Plugins
+* AesirX Consent Shield for Domain/Path-Based Blocking
+
+= 4.1.5 =
+
+* Update dependencies
+* Fix bugs
+* Add consent data to flow detail
+
+= 4.1.4 =
+
+* Update dependencies
+* Update Requires at least to 5.9
+
+= 4.1.3 =
+
+* Fix login in external mode
+* Fix reload page in BI
+* Update dependencies
 
 = 4.1.2 =
 

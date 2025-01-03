@@ -1,4 +1,7 @@
 {
+  "name": "aesirx_analytics",
+  "version": "4.2.3",
+  "description": "analytics via aesirx",
   "private": true,
   "workspaces": [
     "packages/wordpress-analytics-plugin",
@@ -8,10 +11,44 @@
     "packages/aesirx-lib"
   ],
   "devDependencies": {
-    "nx": "16.3.2"
+    "@prettier/plugin-php": "^0.22.1",
+    "@types/react": "^18.2.8",
+    "@types/react-dom": "^18.3.0",
+    "css-loader": "^6.8.1",
+    "del": "^7.0.0",
+    "dotenv": "^16.3.1",
+    "filemanager-webpack-plugin": "^8.0.0",
+    "git-revision-webpack-plugin": "^5.0.0",
+    "gulp": "^4.0.2",
+    "gulp-composer": "^0.4.5",
+    "gulp-zip": "^5.1.0",
+    "gulp-rename": "^2.0.0",
+    "lodash": "^4.17.21",
+    "prettier": "^3.0.3",
+    "process": "^0.11.10",
+    "sass": "^1.69.3",
+    "sass-loader": "^14.2.1",
+    "style-loader": "^3.3.2",
+    "terser-webpack-plugin": "^5.3.7",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
+    "webpack-assets-manifest": "^5.1.0",
+    "webpack-stream": "^7.0.0"
+  },
+  "dependencies": {
+    "aesirx-analytics": "^2.3.3",
+    "aesirx-bi-app": "^2.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.3.1",
+    "react-spinners": "^0.13.8"
   },
   "resolutions": {
-    "@yarnpkg/parsers": "3.0.0-rc.48.1",
+    "aesirx-lib": "^2.1.1",
+    "aesirx-sso": "^1.4.18",
+    "aesirx-uikit": "^1.3.0",
+    "react": "^18",
+    "react-dom": "^18",
     "tough-cookie": "^4",
     "semver": "^7",
     "jsdom": "^16",
@@ -20,16 +57,11 @@
     "json5": "^2",
     "@types/react": "^18",
     "d3-color": "^3",
-    "tsup": "7.2.0",
-    "rollup": "3.2.5"
-  },
-  "scripts": {
-    "prepare": "nx run-many -t build -p aesirx-uikit aesirx-lib aesirx-analytics && nx run-many -t build:lib --exclude aesirx-uikit aesirx-lib aesirx_analytics",
-    "dev": "nx run-many -t dev -p aesirx-bi-app aesirx-analytics aesirx-uikit aesirx-lib aesirx_analytics",
-    "build": "nx run aesirx_analytics:build",
-    "build:lib": "nx run aesirx_analytics:build:lib",
-    "lint:check": "nx run aesirx_analytics:lint:check",
-    "format:check": "nx run aesirx_analytics:format:check",
-    "prepublishOnly": "nx run aesirx_analytics:prepublishOnly"
+    "glob-parent": "^5",
+    "shelljs": "^0.8.5",
+    "ws": "^8.18.0",
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8",
+    "elliptic": "^6.5.7"
   }
 }
