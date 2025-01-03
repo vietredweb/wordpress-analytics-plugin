@@ -24,7 +24,7 @@ function movePluginFolderTask() {
 
 function moveAnalyticJSTask() {
   return gulp
-    .src(['../../node_modules/aesirx-analytics/dist/analytics.js'])
+  .src(['../aesirx-analytics/dist/analytics.js'])
     .pipe(rename('consent.js'))
     .pipe(gulp.dest(`${dist}/plugins/aesirx-analytics/assets/vendor`));
 }

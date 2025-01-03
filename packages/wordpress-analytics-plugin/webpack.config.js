@@ -62,7 +62,7 @@ module.exports = {
             {
               source: path.resolve(
                 __dirname,
-                '../../node_modules/aesirx-bi-app/public/assets/images/'
+                '../aesirx-bi-app/packages/aesirx-bi-app/public/assets/images/'
               ),
               destination: path.resolve(
                 __dirname,
@@ -72,7 +72,7 @@ module.exports = {
             {
               source: path.resolve(
                 __dirname,
-                '../../node_modules/aesirx-bi-app/public/assets/data/'
+                '../aesirx-bi-app/packages/aesirx-bi-app/public/assets/data/'
               ),
               destination: path.resolve(__dirname, `${dist}/plugins/aesirx-analytics/assets/data/`),
             },
